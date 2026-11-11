@@ -35,7 +35,7 @@ decisão arquitetural.
 - Serviço FastAPI separado para biometria.
 - PostgreSQL 17 com `vector`, `pg_trgm` e `unaccent`.
 - Relatórios de desaparecidos possuem criação, listagem/busca, consulta e atualização de status.
-- O motor facial, a busca vetorial real e o fluxo institucional completo ainda não estão implementados.
+- Detecção, embeddings, cadastro de até três referências e busca vetorial multiângulo estão implementados; gestão institucional completa e lifecycle de exclusão/substituição ainda não.
 - A suíte atual possui testes Bun e Pytest; execute-os antes de concluir uma alteração.
 
 ## Regra contra suposições

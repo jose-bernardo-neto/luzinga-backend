@@ -83,7 +83,11 @@ casos de uso. Esse é o local correto para ligar novas implementações concreta
 - Modelos de resposta usam Pydantic.
 - `FaceEngine` é uma porta `Protocol`.
 - `InsightFaceEngine` é o adapter reservado para a implementação concreta.
-- O motor ainda não detecta nem compara faces; ambos os métodos retornam 501 por meio da camada HTTP.
+- O motor usa InsightFace `buffalo_l` em CPU, exige exatamente um rosto por foto e extrai embeddings normalizados de 512 dimensões.
+- A busca aceita até três fotos e ordena candidatos pela média das similaridades de cosseno consultadas no pgvector.
+- O cadastro aceita até três referências por proprietário e exige autoria da ficha ou instituição verificada responsável.
+- Imagens usam armazenamento local com permissão `0600`; embeddings ficam no pgvector.
+- A comunicação de escrita com o serviço Python usa uma chave interna compartilhada.
 
 ## Observabilidade e encerramento
 

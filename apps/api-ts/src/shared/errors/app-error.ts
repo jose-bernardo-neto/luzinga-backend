@@ -42,6 +42,12 @@ export class ConflictError extends AppError {
   }
 }
 
+export class UnprocessableEntityError extends AppError {
+  constructor(message = "Dados inválidos.", details?: unknown) {
+    super(422, "VALIDATION_ERROR", message, details);
+  }
+}
+
 export class ServiceUnavailableError extends AppError {
   constructor(message = "Serviço temporariamente indisponível.", details?: unknown) {
     super(503, "SERVICE_UNAVAILABLE", message, details);

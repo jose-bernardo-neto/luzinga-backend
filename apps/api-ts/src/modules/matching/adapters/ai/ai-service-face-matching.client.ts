@@ -1,4 +1,5 @@
 import type {
+  BiometricEnrollmentResult,
   FaceDetectionResult,
   FaceImage,
   FaceMatchOptions,
@@ -6,12 +7,20 @@ import type {
 } from "@/modules/matching/domain/face-matching";
 import type { FaceMatchingPort } from "@/modules/matching/ports/face-matching.port";
 import { env } from "@/shared/config/env";
-import { ServiceUnavailableError } from "@/shared/errors/app-error";
+import {
+  AppError,
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  ServiceUnavailableError,
+  UnprocessableEntityError,
+} from "@/shared/errors/app-error";
 
 interface AiDetectionPayload {
   face_detected: boolean;
   quality?: number | null;
   message?: string | null;
+  embedding_dimensions?: number | null;
 }
 
 interface AiMatchCandidatePayload {
@@ -25,6 +34,18 @@ interface AiMatchCandidatePayload {
 interface AiMatchPayload {
   candidates: AiMatchCandidatePayload[];
   processing_ms?: number;
+  processed_images: number;
+}
+
+interface AiEnrollmentPayload {
+  references: Array<{
+    biometric_record_id: string;
+    owner_type: "MISSING_PERSON" | "SHELTERED_PERSON";
+    owner_id: string;
+    image_path: string;
+    quality: number;
+  }>;
+  total_references: number;
 }
 
 export class AiServiceFaceMatchingClient implements FaceMatchingPort {
@@ -36,14 +57,15 @@ export class AiServiceFaceMatchingClient implements FaceMatchingPort {
       faceDetected: payload.face_detected,
       quality: payload.quality ?? null,
       message: payload.message ?? null,
+      embeddingDimensions: payload.embedding_dimensions ?? null,
     };
   }
 
   async match(
-    image: FaceImage,
+    images: FaceImage[],
     options: FaceMatchOptions,
   ): Promise<FaceMatchResult> {
-    const response = await this.post("/match", image, {
+    const response = await this.post("/match", images, {
       limit: String(options.limit),
       threshold: String(options.threshold),
     });
@@ -58,20 +80,58 @@ export class AiServiceFaceMatchingClient implements FaceMatchingPort {
         imagePath: candidate.image_path ?? null,
       })),
       processingMs: payload.processing_ms ?? 0,
+      processedImages: payload.processed_images,
+    };
+  }
+
+  async enroll(
+    images: FaceImage[],
+    ownerType: "MISSING_PERSON" | "SHELTERED_PERSON",
+    ownerId: string,
+  ): Promise<BiometricEnrollmentResult> {
+    const response = await this.post(
+      "/enroll",
+      images,
+      {},
+      {
+        owner_type: ownerType,
+        owner_id: ownerId,
+      },
+      { "X-API-Key": env.AI_SERVICE_API_KEY },
+    );
+    const payload = (await response.json()) as AiEnrollmentPayload;
+
+    return {
+      references: payload.references.map((reference) => ({
+        biometricRecordId: reference.biometric_record_id,
+        ownerType: reference.owner_type,
+        ownerId: reference.owner_id,
+        imagePath: reference.image_path,
+        quality: reference.quality,
+      })),
+      totalReferences: payload.total_references,
     };
   }
 
   private async post(
     path: string,
-    image: FaceImage,
+    images: FaceImage | FaceImage[],
     query: Record<string, string> = {},
+    fields: Record<string, string> = {},
+    headers: Record<string, string> = {},
   ): Promise<Response> {
     const form = new FormData();
-    form.append(
-      "file",
-      new Blob([image.buffer], { type: image.mimeType }),
-      image.filename,
-    );
+    for (const image of Array.isArray(images) ? images : [images]) {
+      form.append(
+        "file",
+        new Blob([image.buffer], { type: image.mimeType }),
+        image.filename,
+      );
+    }
+
+    for (const [key, value] of Object.entries(fields)) {
+      form.append(key, value);
+    }
 
     const url = new URL(path, env.AI_SERVICE_URL);
 
@@ -83,24 +143,50 @@ export class AiServiceFaceMatchingClient implements FaceMatchingPort {
       const response = await fetch(url, {
         method: "POST",
         body: form,
+        headers,
         signal: AbortSignal.timeout(env.AI_SERVICE_TIMEOUT_MS),
       });
 
       if (!response.ok) {
         const detail = await response.text().catch(() => "");
+        const remoteDetails = {
+          status: response.status,
+          detail: detail.slice(0, 500),
+        };
+
+        if (response.status === 422) {
+          throw new UnprocessableEntityError(
+            "Uma ou mais fotos não são adequadas para reconhecimento facial.",
+            remoteDetails,
+          );
+        }
+
+        if ([400, 413, 415].includes(response.status)) {
+          throw new BadRequestError(
+            "Uma ou mais imagens enviadas são inválidas.",
+            remoteDetails,
+          );
+        }
+
+        if (response.status === 404) {
+          throw new NotFoundError("Proprietário biométrico não encontrado.");
+        }
+
+        if (response.status === 409) {
+          throw new ConflictError(
+            "O limite de três referências biométricas foi atingido.",
+          );
+        }
 
         throw new ServiceUnavailableError(
           "O serviço de reconhecimento facial retornou um erro.",
-          {
-            status: response.status,
-            detail: detail.slice(0, 500),
-          },
+          remoteDetails,
         );
       }
 
       return response;
     } catch (error) {
-      if (error instanceof ServiceUnavailableError) {
+      if (error instanceof AppError) {
         throw error;
       }
 

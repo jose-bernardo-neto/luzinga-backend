@@ -1,16 +1,9 @@
 from typing import Protocol
 
-from src.domain.models import FaceDetection, MatchCandidate
+from src.domain.models import ExtractedFace
 
 
 class FaceEngine(Protocol):
     """Porta de saída para o motor de visão computacional."""
 
-    def detect(self, image_bytes: bytes) -> FaceDetection: ...
-
-    def match(
-        self,
-        image_bytes: bytes,
-        limit: int,
-        threshold: float,
-    ) -> list[MatchCandidate]: ...
+    def extract(self, image_bytes: bytes) -> ExtractedFace: ...

@@ -39,10 +39,10 @@ depender das portas e dos tipos de domínio, nunca o contrário.
 - Contratos do motor pertencem a `src/ports` como `Protocol`.
 - Integrações concretas pertencem a `src/adapters`.
 - `src/main.py` expõe FastAPI e traduz falhas para respostas HTTP.
-- Enquanto o motor real não existir, mantenha respostas explícitas; não simule sucesso biométrico.
+- Preserve a regra confirmada de exatamente um rosto por foto e no máximo três ângulos por busca.
 
-O adapter `InsightFaceEngine` atualmente lança `NotImplementedError`; os
-endpoints `/detect-face` e `/match` convertem isso em HTTP 501.
+O adapter `InsightFaceEngine` usa `buffalo_l` em CPU. A busca agrega os ângulos
+pela média das similaridades; não altere essa estratégia sem nova decisão.
 
 ## 4. Banco e migrations
 

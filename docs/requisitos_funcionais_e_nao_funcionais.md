@@ -27,23 +27,23 @@ avaliada contra o código atual; ela não altera o requisito original.
 | ID | Requisito | Critérios consolidados | Estado e evidência |
 | --- | --- | --- | --- |
 | RF-04 | Upload multiformato | Aceitar JPG, JPEG, PNG e PDF. | **Parcial.** Rotas aceitam JPEG, PNG e WebP até 10 MiB. PDF não é aceito; WebP é capacidade adicional não citada no requisito. |
-| RF-05 | Pré-validação e feedback | Rejeitar formato/corrupção/ausência de face; aprovar e extrair embedding. | **Parcial.** Tipo e tamanho são validados e erros de tipo retornam 422. Detecção, análise de corrupção e extração de embedding dependem do motor ainda não implementado. |
+| RF-05 | Pré-validação e feedback | Rejeitar formato/corrupção/ausência de face; aprovar e extrair embedding. | **Implementado para imagens.** Tipo, tamanho, decodificação, quantidade de rostos e embedding são validados. PDF continua pendente no RF-04. |
 
 ### Busca híbrida e reconhecimento facial
 
 | ID | Requisito | Critérios consolidados | Estado e evidência |
 | --- | --- | --- | --- |
 | RF-06 | Busca textual avançada | Buscar nome, filiação, idade/faixa, naturalidade e endereço, tolerando variações de grafia. | **Parcial.** Busca atual cobre nome, naturalidade, endereço e filiação. Não filtra idade e não oferece full-text/fuzzy completo. |
-| RF-07 | Motor de face matching | Comparar imagem com base vetorial. | **Pendente.** Porta, cliente e endpoint existem; `InsightFaceEngine.match` lança `NotImplementedError`. |
-| RF-08 | Relatório ordenado de similaridade | Retornar candidatos em ordem decrescente com percentual e dados de contexto. | **Estruturado.** Contratos possuem candidatos e similaridade, mas não há resultados reais nem enriquecimento completo com nome/instituição. |
+| RF-07 | Motor de face matching | Comparar imagem com base vetorial. | **Implementado no backend.** InsightFace extrai embeddings, referências são persistidas e o adapter consulta pgvector. Calibração de precisão ainda é necessária. |
+| RF-08 | Relatório ordenado de similaridade | Retornar candidatos em ordem decrescente com percentual e dados de contexto. | **Parcial.** Candidatos são ordenados pela média da similaridade entre até três ângulos. Enriquecimento com nome/instituição permanece pendente. |
 | RF-09 | Busca combinada multimodal | Combinar texto e biometria ou usar somente imagem. | **Pendente.** Endpoints textual e facial são separados; não há orquestração combinada. |
 
 ### Gestão de ocorrências
 
 | ID | Requisito | Critérios consolidados | Estado e evidência |
 | --- | --- | --- | --- |
-| RF-10 | Registro de desaparecidos | Cidadão submete e gerencia ficha com dados biográficos e fotografias. | **Parcial.** Criação, listagem, busca, consulta e mudança de status existem. Fotografia/`BiometricRecord` ainda não é vinculada pelo fluxo de relatório. |
-| RF-11 | Gestão de acolhidos | Instituição publica, atualiza e remove pessoas sob sua tutela em painel dedicado. | **Estruturado.** `Institution` e `ShelteredPerson` existem no schema; não há rotas, casos de uso ou painel. |
+| RF-10 | Registro de desaparecidos | Cidadão submete e gerencia ficha com dados biográficos e fotografias. | **Parcial.** CRUD de ficha e cadastro de até três referências biométricas pelo autor existem; remoção/substituição de fotos ainda não. |
+| RF-11 | Gestão de acolhidos | Instituição publica, atualiza e remove pessoas sob sua tutela em painel dedicado. | **Parcial.** Instituição verificada pode cadastrar biometria de acolhido existente; CRUD/painel de acolhidos ainda não existe. |
 
 ## Requisitos não funcionais
 
@@ -75,7 +75,7 @@ alterar unilateralmente a especificação:
 | US-01 — Cadastro diferenciado | RF-01 | Parcial |
 | US-02 — Recuperação de senha | RF-03 | Parcial |
 | US-03 — Upload e diagnóstico | RF-04, RF-05 | Parcial |
-| US-04 — Face matching ordenado | RF-07, RF-08, RNF-03 | Pendente / não verificado |
+| US-04 — Face matching ordenado | RF-07, RF-08, RNF-03 | Parcial / não verificado |
 | US-05 — Busca multimodal | RF-06, RF-09 | Parcial / pendente |
 | US-06 — Registro de acolhido | RF-11, RNF-01 | Estruturado / pendente |
 

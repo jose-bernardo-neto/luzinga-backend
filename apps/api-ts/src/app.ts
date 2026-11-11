@@ -5,10 +5,12 @@ import { authPlugin } from "@/modules/auth/adapters/http/auth.plugin";
 import { authRoutes } from "@/modules/auth/adapters/http/auth.routes";
 import { AiServiceFaceMatchingClient } from "@/modules/matching/adapters/ai/ai-service-face-matching.client";
 import { createMatchingRoutes } from "@/modules/matching/adapters/http/matching.routes";
+import { PrismaBiometricOwnerAccess } from "@/modules/matching/adapters/persistence/prisma-biometric-owner-access";
 import {
   DetectFace,
   FindFaceMatches,
 } from "@/modules/matching/application/face-matching.use-cases";
+import { RegisterBiometricReferences } from "@/modules/matching/application/register-biometric-references";
 import { createReportsRoutes } from "@/modules/reports/adapters/http/reports.routes";
 import { PrismaMissingPersonReportRepository } from "@/modules/reports/adapters/persistence/prisma-missing-person-report.repository";
 import { CreateMissingPersonReport } from "@/modules/reports/application/create-missing-person-report";
@@ -33,6 +35,11 @@ export function createApp() {
   const faceMatching = new AiServiceFaceMatchingClient();
   const detectFace = new DetectFace(faceMatching);
   const findFaceMatches = new FindFaceMatches(faceMatching);
+  const biometricOwnerAccess = new PrismaBiometricOwnerAccess(prisma);
+  const registerBiometricReferences = new RegisterBiometricReferences(
+    biometricOwnerAccess,
+    faceMatching,
+  );
 
   return new Elysia({ name: "luzinga-api" })
     .use(
@@ -88,6 +95,7 @@ export function createApp() {
       createMatchingRoutes({
         detectFace,
         findFaceMatches,
+        registerBiometricReferences,
       }),
     )
     .get(

@@ -9,6 +9,7 @@ build/
 # Prisma Client gerado
 apps/api-ts/src/generated/
 apps/api-ts/prisma/*.db
+apps/ai-python/data/
 
 # Variáveis de ambiente
 .env
