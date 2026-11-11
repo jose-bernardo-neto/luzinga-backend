@@ -15,7 +15,7 @@ sequenceDiagram
 
     Cliente->>API: POST /api/auth/sign-up/email<br/>{name, email, password, role}
     API->>Auth: handler(request)
-    Auth->>Auth: validar role<br/>CITIZEN ou INSTITUTION_ADMIN
+    Auth->>Auth: validar role e allowlist<br/>para PLATFORM_ADMIN
     Auth->>DB: criar User e Account
     DB-->>Auth: registros persistidos
     Auth->>DB: criar Session
@@ -122,18 +122,59 @@ sequenceDiagram
         UC->>UC: limitar limit e threshold
         UC->>Client: detect() ou match()
         Client->>AI: POST /detect-face ou /match?limit&threshold
-        AI->>Engine: detect(bytes) ou match(bytes, opções)
-        Engine-->>AI: NotImplementedError
-        AI-->>Client: 501 Not Implemented
-        Client-->>UC: ServiceUnavailableError
-        UC-->>API: erro propagado
-        API-->>Usuario: 503 SERVICE_UNAVAILABLE<br/>com status remoto 501
+        AI->>Engine: extrair um embedding por foto
+        alt foto sem rosto ou com múltiplos rostos
+            Engine-->>AI: erro de validação facial
+            AI-->>Client: 422
+            Client-->>API: ServiceUnavailableError com detalhe remoto
+            API-->>Usuario: 503 SERVICE_UNAVAILABLE
+        else embeddings válidos
+            Engine-->>AI: vetores normalizados de 512 dimensões
+            AI->>AI: consultar pgvector e calcular média por candidato
+            AI-->>Client: candidatos ordenados
+            Client-->>UC: resultado convertido
+            UC-->>API: resultado
+            API-->>Usuario: 200 + candidatos
+        end
     end
 ```
 
-## 5. Matching — fluxo-alvo dos requisitos
+## 5. Cadastro de referências biométricas — fluxo atual
 
-Este fluxo representa RF-05, RF-07 e RF-08 e **ainda não está implementado**.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Usuario
+    participant API as API TypeScript
+    participant DB as PostgreSQL
+    participant AI as Serviço biométrico
+    participant Disk as Armazenamento local
+
+    Usuario->>API: POST /matching/references/:ownerType/:ownerId
+    API->>DB: verificar autoria ou instituição responsável/verificada
+    DB-->>API: acesso permitido
+    API->>AI: fotos + proprietário + X-API-Key
+    AI->>AI: detectar exatamente um rosto e extrair embedding por foto
+    AI->>Disk: salvar imagens com permissão 0600
+    AI->>DB: lock por proprietário + contar referências
+    alt total excede três ou persistência falha
+        DB-->>AI: conflito/erro
+        AI->>Disk: remover arquivos recém-criados
+        AI-->>API: erro tratado
+        API-->>Usuario: 409 ou erro correspondente
+    else cadastro válido
+        AI->>DB: inserir BiometricRecord e vector(512)
+        DB-->>AI: total de referências
+        AI-->>API: referências cadastradas
+        API-->>Usuario: 200
+    end
+```
+
+## 6. Matching — fluxo implementado e evolução necessária
+
+Este fluxo representa RF-05, RF-07 e RF-08. Detecção, extração, cadastro de
+referências e consulta vetorial estão implementados. Calibração de precisão,
+object storage e remoção auditável ainda são evoluções necessárias.
 
 ```mermaid
 sequenceDiagram
@@ -161,7 +202,7 @@ sequenceDiagram
     end
 ```
 
-## 6. Recuperação de senha — fluxo atual e limite operacional
+## 7. Recuperação de senha — fluxo atual e limite operacional
 
 ```mermaid
 sequenceDiagram

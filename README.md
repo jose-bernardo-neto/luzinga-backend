@@ -14,7 +14,7 @@ Orientações específicas para agentes de código estão em
 | Autenticação | [Better Auth](https://better-auth.com) |
 | ORM | [Prisma 7](https://www.prisma.io) (driver adapter `@prisma/adapter-pg`) |
 | Banco | PostgreSQL + [pgvector](https://github.com/pgvector/pgvector) |
-| Serviço de IA | Python + FastAPI (esqueleto) |
+| Serviço de IA | Python + FastAPI + InsightFace + ONNX Runtime |
 
 > Prisma 7 foi escolhido de propósito: o Prisma 8 ainda está em RC e o adapter oficial do Better Auth ainda não o suporta.
 
@@ -53,7 +53,7 @@ Orientações específicas para agentes de código estão em
 │   │               ├── ports/
 │   │               ├── application/
 │   │               └── adapters/    # Cliente HTTP do serviço Python + rotas
-│   └── ai-python/                  # Serviço de visão computacional (esqueleto)
+│   └── ai-python/                  # Detecção, embeddings e consulta vetorial
 │       ├── pyproject.toml
 │       └── src/
 │           ├── domain/
@@ -110,7 +110,10 @@ pip install -r requirements.txt
 uvicorn src.main:app --reload --port 8000
 ```
 
-O serviço de IA está como esqueleto: `/health` funciona e os endpoints de biometria respondem `501` até o pipeline OpenCV/InsightFace ser implementado.
+O serviço usa InsightFace `buffalo_l` em CPU. `/detect-face` detecta exatamente
+um rosto e extrai um embedding de 512 dimensões; `/match` aceita até três fotos
+e consulta o pgvector pela média das similaridades. Ainda falta o fluxo de
+cadastro/persistência de novas referências biométricas.
 
 ## Scripts
 
@@ -141,7 +144,9 @@ O serviço de IA está como esqueleto: `/health` funciona e os endpoints de biom
 - `POST /api/auth/reset-password`
 - `GET /api/auth/get-session`
 
-O cadastro aceita `role: "CITIZEN" | "INSTITUTION_ADMIN"`. O valor é validado por um `databaseHook`.
+O cadastro aceita `CITIZEN`, `INSTITUTION_ADMIN` e `PLATFORM_ADMIN`. O último
+só é permitido para e-mails configurados em `PLATFORM_ADMIN_EMAILS`; o valor é
+validado por um `databaseHook`.
 
 ### Aplicação
 
@@ -153,6 +158,13 @@ O cadastro aceita `role: "CITIZEN" | "INSTITUTION_ADMIN"`. O valor é validado p
 - `PATCH /reports/missing/:id/status`
 - `POST /matching/detect` — valida a foto e detecta rosto (multipart `image`)
 - `POST /matching/search` — busca por similaridade facial (multipart `image`)
+- `POST /matching/references/:ownerType/:ownerId` — cadastra de 1 a 3 referências biométricas
+- `POST /institutions` / `GET|PATCH /institutions/me` — cadastro e gestão da própria instituição
+- `GET /institutions/admin` — fila administrativa de instituições
+- `PATCH /institutions/admin/:id/status` — verifica, rejeita ou suspende instituição
+- `POST|GET /sheltered-people` — cria e lista acolhidos da instituição
+- `GET|PATCH|DELETE /sheltered-people/:id` — consulta, atualiza ou arquiva acolhido
+- `POST /sheltered-people/:id/restore` — restaura registro arquivado
 
 ## Decisões de arquitetura
 
@@ -162,12 +174,14 @@ O cadastro aceita `role: "CITIZEN" | "INSTITUTION_ADMIN"`. O valor é validado p
 - **E-mail por porta**: `Mailer` é uma porta; `ConsoleMailer` registra o link de recuperação no log em desenvolvimento.
 - **Biometria fora do TS**: o serviço Python é acessado por um adapter HTTP (`FaceMatchingPort`), mantendo a API principal independente do modelo de IA.
 - **pgvector**: `BiometricRecord.embedding` é `Unsupported("vector(512)")`; consultas vetoriais serão feitas via SQL no serviço de IA.
+- **Referências biométricas**: imagens são armazenadas em disco local configurável e embeddings são persistidos no pgvector. O autor da ficha ou a instituição verificada responsável pode cadastrar até três fotos.
+- **Administração da plataforma**: `PLATFORM_ADMIN` é reservado a e-mails em `PLATFORM_ADMIN_EMAILS` e pode revisar o status das instituições, sem operar acolhidos em nome delas.
 - **LGPD**: exclusões em cascata existem para relações específicas, mas o termo/registro de consentimento do acolhido ainda não está modelado e deve ser implementado em etapa futura (US-06).
 
 ## Próximos passos sugeridos
 
-1. Implementar o pipeline real de detecção/embeddings no `ai-python` (InsightFace + pgvector).
-2. Criar o módulo de upload/armazenamento de mídia (S3/MinIO) e vincular `BiometricRecord`.
+1. Migrar o armazenamento local de imagens para object storage (S3/MinIO) antes de escalar horizontalmente.
+2. Implementar remoção e substituição auditável de referências biométricas.
 3. Evoluir a busca textual para `tsvector` + `pg_trgm`/`unaccent` (RF-06).
 4. Implementar o cadastro institucional com CNPJ e fluxo de verificação (US-01).
 5. Ampliar testes de integração para autenticação e persistência.

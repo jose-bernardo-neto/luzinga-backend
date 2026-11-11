@@ -91,9 +91,23 @@ URLs:
 - OpenAPI: `http://localhost:8000/docs`;
 - health: `http://localhost:8000/health`.
 
-`/detect-face` e `/match` respondem 501 até o motor ser implementado. Quando
-chamados pela API TypeScript, essa falha remota aparece como 503 com detalhes do
-status remoto.
+Na primeira chamada biométrica, o InsightFace baixa o modelo `buffalo_l` para o
+cache do usuário. `/detect-face` retorna os metadados da face e confirma 512
+dimensões; `/match` aceita de uma a três partes multipart chamadas `file`.
+
+Configure a mesma `AI_SERVICE_API_KEY` na API TypeScript e no serviço Python.
+As imagens cadastradas ficam, por padrão, em
+`apps/ai-python/data/biometric`, diretório ignorado pelo Git.
+
+Cadastro pela API pública:
+
+```bash
+curl -X POST \
+  'http://localhost:3000/matching/references/MISSING_PERSON/<uuid-da-ficha>' \
+  --cookie cookies.txt \
+  -F 'images=@frente.jpg' \
+  -F 'images=@perfil.jpg'
+```
 
 ## Verificação rápida
 

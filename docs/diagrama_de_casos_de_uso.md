@@ -9,7 +9,7 @@ flowchart LR
     U[Usuário autenticado]
     C[Cidadão]
     I[Representante institucional]
-    A[Administrador de verificação<br/>ator ainda não definido]
+    A[Administrador da plataforma]
 
     C -. "especializa" .-> U
     I -. "especializa" .-> U
@@ -62,7 +62,9 @@ flowchart LR
 
     class UC02,UC07,UC08 implemented
     class UC01,UC03,UC06,UC09 partial
-    class UC04,UC05,UC10,UC11,UC12,UC13 pending
+    class UC11,UC13 pending
+    class UC04,UC05,UC12 implemented
+    class UC10 partial
 ```
 
 ## Legenda e rastreabilidade
@@ -72,18 +74,16 @@ flowchart LR
 | Cadastrar conta e escolher perfil | RF-01 / US-01 | Parcial | Perfis existem; dados e aprovação institucional não. |
 | Entrar e manter sessão | RF-02 | Implementado | Better Auth com sessão persistida. |
 | Recuperar senha | RF-03 / US-02 | Parcial | Fluxo existe, mas o adapter atual registra e-mail no console. |
-| Completar cadastro institucional | RF-01 / US-01 | Pendente | Entidade existe no schema, sem fluxo HTTP. |
-| Verificar conta institucional | RF-01 / US-01 | Pendente | `verifiedStatus` existe; ator e fluxo administrativo não foram definidos. |
+| Completar cadastro institucional | RF-01 / US-01 | Implementado | Representante cria e edita a instituição; dados legais alterados voltam a `PENDING`. |
+| Verificar conta institucional | RF-01 / US-01 | Implementado | `PLATFORM_ADMIN` verifica, rejeita ou suspende. |
 | Criar ficha de desaparecido | RF-10 | Parcial | Dados biográficos existem; fotografia vinculada à ficha ainda não. |
 | Consultar e buscar fichas | RF-06 / RF-10 | Implementado parcialmente em relação ao RF-06 | CRUD de consulta existe; full-text tolerante a grafia não. |
 | Atualizar status da própria ficha | RF-10 | Implementado | Apenas o autor pode alterar `ACTIVE`, `FOUND`, `ARCHIVED`. |
 | Enviar e validar mídia facial | RF-04 / RF-05 / US-03 | Parcial | Formato/tamanho são validados; motor e PDF estão pendentes. |
-| Buscar por similaridade facial | RF-07 / RF-08 / US-04 | Pendente | API encaminha, mas motor responde 501. |
+| Buscar por similaridade facial | RF-07 / RF-08 / US-04 | Parcial | Detecção, embeddings e consulta multiângulo funcionam; cadastro de referências e enriquecimento dos candidatos ainda não. |
 | Combinar busca textual e facial | RF-09 / US-05 | Pendente | Existem endpoints separados, não uma busca combinada. |
-| Gerenciar pessoas acolhidas | RF-11 / US-06 | Pendente | Apenas schema. |
+| Gerenciar pessoas acolhidas | RF-11 / US-06 | Implementado | CRUD restrito à instituição verificada, com arquivamento lógico e restauração. |
 | Registrar consentimento biométrico | RNF-01 / US-06 | Pendente | Não existe entidade nem endpoint de consentimento. |
 
-O ator “Administrador de verificação” aparece apenas para tornar visível a
-necessidade de validação administrativa da US-01. Os documentos de requisitos
-não definem esse perfil, suas permissões ou seu fluxo; isso requer decisão de
-produto antes da implementação.
+O ator `PLATFORM_ADMIN` verifica, rejeita e suspende instituições. A decisão
+confirmada impede que ele opere acolhidos em nome de uma instituição.

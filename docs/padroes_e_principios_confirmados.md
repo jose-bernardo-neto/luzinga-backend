@@ -59,9 +59,10 @@ casos de uso. Esse é o local correto para ligar novas implementações concreta
 ## Autenticação
 
 - Better Auth persiste usuários, contas, sessões e verificações via Prisma.
-- Perfis aceitos: `CITIZEN` e `INSTITUTION_ADMIN`.
+- Perfis aceitos: `CITIZEN`, `INSTITUTION_ADMIN` e `PLATFORM_ADMIN`.
 - Perfil padrão: `CITIZEN`.
 - O perfil é validado no hook de criação.
+- `PLATFORM_ADMIN` só pode ser criado por e-mail explicitamente allowlisted.
 - O hook de atualização remove tentativas de alteração de `role` pelo endpoint genérico de usuário.
 - Sessões duram sete dias e têm atualização configurada para um dia.
 - Redefinição de senha revoga sessões existentes.
@@ -83,7 +84,11 @@ casos de uso. Esse é o local correto para ligar novas implementações concreta
 - Modelos de resposta usam Pydantic.
 - `FaceEngine` é uma porta `Protocol`.
 - `InsightFaceEngine` é o adapter reservado para a implementação concreta.
-- O motor ainda não detecta nem compara faces; ambos os métodos retornam 501 por meio da camada HTTP.
+- O motor usa InsightFace `buffalo_l` em CPU, exige exatamente um rosto por foto e extrai embeddings normalizados de 512 dimensões.
+- A busca aceita até três fotos e ordena candidatos pela média das similaridades de cosseno consultadas no pgvector.
+- O cadastro aceita até três referências por proprietário e exige autoria da ficha ou instituição verificada responsável.
+- Imagens usam armazenamento local com permissão `0600`; embeddings ficam no pgvector.
+- A comunicação de escrita com o serviço Python usa uma chave interna compartilhada.
 
 ## Observabilidade e encerramento
 

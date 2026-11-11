@@ -63,6 +63,17 @@ export const auth = betterAuth({
             });
           }
 
+          if (
+            role === "PLATFORM_ADMIN" &&
+            !env.PLATFORM_ADMIN_EMAILS.some(
+              (email) => email.toLowerCase() === user.email.toLowerCase(),
+            )
+          ) {
+            throw new APIError("FORBIDDEN", {
+              message: "E-mail não autorizado para administração da plataforma.",
+            });
+          }
+
           return {
             data: {
               ...user,

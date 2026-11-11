@@ -9,7 +9,7 @@ Cliente HTTP
 API Bun/Elysia :3000
     |-- Better Auth --> Prisma --> PostgreSQL :5432
     |-- Reports ------> Prisma --> PostgreSQL :5432
-    `-- Matching -----> FastAPI :8000 --> FaceEngine (pendente)
+    `-- Matching -----> FastAPI :8000 --> InsightFace + pgvector
 ```
 
 ## `apps/api-ts`
@@ -56,11 +56,14 @@ fora de produção para evitar múltiplos clientes durante reload.
 - `/auth/me` protegido;
 - porta `Mailer` e adapter de console.
 
-**Não implementado como fluxo próprio:**
+**Instituições e administração:**
 
-- cadastro completo dos dados da instituição;
-- verificação institucional;
-- adapter real de envio de e-mail.
+- representante cria e edita a própria instituição;
+- status: `PENDING`, `VERIFIED`, `SUSPENDED`, `REJECTED`;
+- alteração de documento ou razão social reinicia a verificação;
+- `PLATFORM_ADMIN` lista e altera status, mas não opera acolhidos;
+- criação de `PLATFORM_ADMIN` exige e-mail em `PLATFORM_ADMIN_EMAILS`;
+- o adapter de e-mail continua sendo de console.
 
 ### Módulo `reports`
 
@@ -99,14 +102,32 @@ fora de produção para evitar múltiplos clientes durante reload.
 - conversão entre `snake_case` do Python e `camelCase` do TypeScript;
 - tradução de falha remota para HTTP 503.
 
-**Pendente:** resultado biométrico real, porque o motor Python responde 501.
+**Implementado no fluxo de busca:**
+
+- detecção de exatamente um rosto por foto;
+- extração de embeddings normalizados de 512 dimensões;
+- busca com 1 a 3 ângulos;
+- agregação pela média das similaridades de cosseno;
+- consulta de candidatos em `biometric_record` pelo pgvector.
+
+**Cadastro de referências implementado:**
+
+- autor da ficha pode cadastrar biometria do desaparecido;
+- administrador da instituição responsável pode cadastrar biometria do acolhido, desde que a instituição esteja verificada;
+- limite de três referências por pessoa, protegido por lock transacional;
+- imagens locais com permissão `0600` e embeddings no pgvector;
+- autenticação interna por `X-API-Key` entre API e serviço Python;
+- rollback dos arquivos caso a persistência falhe.
+
+**Pendente:** migração das imagens para object storage e fluxos de exclusão ou
+substituição auditável.
 
 ## `apps/ai-python`
 
 ### `src/main.py`
 
-Expõe a aplicação FastAPI e converte `NotImplementedError` do motor em 501.
-Os parâmetros `limit` e `threshold` de `/match` pertencem à query string.
+Expõe a aplicação FastAPI, valida os uploads e traduz erros conhecidos. Os
+parâmetros `limit` e `threshold` de `/match` pertencem à query string.
 
 ### `src/domain/models.py`
 
@@ -119,8 +140,20 @@ Contrato do motor com operações `detect` e `match`.
 
 ### `src/adapters/insightface_engine.py`
 
-Placeholder explícito. OpenCV, InsightFace, ONNX Runtime e acesso vetorial são
-dependências opcionais previstas, não um pipeline funcional.
+Implementa OpenCV + InsightFace `buffalo_l` em CPU. Rejeita imagem inválida,
+ausência de rosto e múltiplos rostos, e retorna um embedding normalizado.
+
+### `src/adapters/pgvector_biometric_repository.py`
+
+Consulta os registros biométricos, calcula a similaridade de cosseno para cada
+ângulo e ordena pela média das similaridades. Também persiste referências com
+limite transacional por proprietário.
+
+### `src/adapters/local_biometric_storage.py`
+
+Armazena imagens em raiz configurável, separadas por tipo e UUID do
+proprietário. É a decisão atual para desenvolvimento; não substitui object
+storage em uma implantação distribuída.
 
 ## `packages/contracts`
 
@@ -142,7 +175,8 @@ Entidades presentes:
 - domínio: `MissingPersonReport`, `Institution`, `ShelteredPerson`, `BiometricRecord`.
 
 `Institution`, `ShelteredPerson` e `BiometricRecord` estão **estruturados no
-schema**, mas ainda não possuem módulos HTTP completos na API. O vínculo
+schema** e agora possuem fluxos HTTP para instituição, acolhidos e referências
+biométricas. O vínculo
 polimórfico de `BiometricRecord.ownerId` não é uma foreign key Prisma para cada
 tipo de proprietário; agentes não devem presumir integridade referencial que o
 banco atualmente não impõe.
@@ -156,3 +190,11 @@ repositório.
 A imagem `pgvector/pgvector` não publica tag Alpine para PostgreSQL 17; por isso
 o Compose mantém `pg17`. Não troque para uma tag não publicada apenas para
 cumprir preferência de distribuição base.
+
+## Módulo `sheltered`
+
+- CRUD de pessoas acolhidas restrito à própria instituição verificada;
+- status `UNCLAIMED`, `IDENTIFIED`, `REUNITED`;
+- remoção lógica por `archivedAt` e restauração explícita;
+- registros arquivados não aparecem por padrão nem participam do matching;
+- fotos entram em etapa separada pelo endpoint de referências biométricas.

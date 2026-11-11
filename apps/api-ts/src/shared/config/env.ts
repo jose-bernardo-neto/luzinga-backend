@@ -65,5 +65,10 @@ export const env = {
   CORS_ORIGINS: list("CORS_ORIGINS", ["http://localhost:3001"]),
   AI_SERVICE_URL: optional("AI_SERVICE_URL", "http://localhost:8000"),
   AI_SERVICE_TIMEOUT_MS: integer("AI_SERVICE_TIMEOUT_MS", 30_000),
+  AI_SERVICE_API_KEY: optional(
+    "AI_SERVICE_API_KEY",
+    "development-only-change-me",
+  ),
+  PLATFORM_ADMIN_EMAILS: list("PLATFORM_ADMIN_EMAILS", []),
   LOG_LEVEL: optional("LOG_LEVEL", nodeEnv === "production" ? "info" : "debug"),
 } as const;
