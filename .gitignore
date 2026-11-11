@@ -1,0 +1,32 @@
+# Dependências
+node_modules/
+.bun/
+
+# Build
+dist/
+build/
+
+# Prisma Client gerado
+apps/api-ts/src/generated/
+apps/api-ts/prisma/*.db
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Logs e sistema
+*.log
+.DS_Store
+.idea/
+.vscode/

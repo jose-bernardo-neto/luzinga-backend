@@ -1,0 +1,28 @@
+{
+  "name": "luzinga",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "cd apps/api-ts && bun run dev",
+    "dev:ai": "cd apps/ai-python && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
+    "build": "cd apps/api-ts && bun run build",
+    "start": "cd apps/api-ts && bun run start",
+    "typecheck": "cd apps/api-ts && bun run typecheck",
+    "test": "cd apps/api-ts && bun test",
+    "test:ai": "cd apps/ai-python && python -m pytest",
+    "check": "bun run typecheck && bun run test",
+    "db:generate": "cd apps/api-ts && bun run db:generate",
+    "db:migrate": "cd apps/api-ts && bun run db:migrate",
+    "db:deploy": "cd apps/api-ts && bun run db:deploy",
+    "db:push": "cd apps/api-ts && bun run db:push",
+    "db:studio": "cd apps/api-ts && bun run db:studio"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

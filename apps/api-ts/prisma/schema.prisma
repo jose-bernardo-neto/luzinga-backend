@@ -1,0 +1,172 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Better Auth (core)
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  CITIZEN
+  INSTITUTION_ADMIN
+}
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  role          UserRole @default(CITIZEN)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions    Session[]
+  accounts    Account[]
+  institution Institution?
+  reports     MissingPersonReport[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ---------------------------------------------------------------------------
+// Domínio: desaparecidos, instituições e biometria
+// ---------------------------------------------------------------------------
+
+enum ReportStatus {
+  ACTIVE
+  FOUND
+  ARCHIVED
+}
+
+model MissingPersonReport {
+  id              String       @id @default(uuid())
+  reporterId      String
+  fullName        String
+  age             Int?
+  birthPlace      String?
+  parentNames     String[]
+  lastSeenAddress String?
+  status          ReportStatus @default(ACTIVE)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([fullName])
+  @@map("missing_person_report")
+}
+
+enum ShelterStatus {
+  UNCLAIMED
+  IDENTIFIED
+  REUNITED
+}
+
+model Institution {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  name           String
+  legalName      String?
+  document       String?  @unique
+  address        String
+  contactPhone   String
+  verifiedStatus Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shelteredPeople ShelteredPerson[]
+
+  @@map("institution")
+}
+
+model ShelteredPerson {
+  id            String        @id @default(uuid())
+  institutionId String
+  fullName      String
+  approxAge     String?
+  foundLocation String?
+  status        ShelterStatus @default(UNCLAIMED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@index([institutionId])
+  @@index([status])
+  @@map("sheltered_person")
+}
+
+enum BiometricOwnerType {
+  MISSING_PERSON
+  SHELTERED_PERSON
+}
+
+model BiometricRecord {
+  id        String              @id @default(uuid())
+  ownerType BiometricOwnerType
+  ownerId   String
+  imagePath String
+  embedding Unsupported("vector(512)")?
+  createdAt DateTime            @default(now())
+
+  @@index([ownerType, ownerId])
+  @@map("biometric_record")
+}
