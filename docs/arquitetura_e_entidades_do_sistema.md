@@ -72,7 +72,7 @@ As entidades centrais refletem os requisitos funcionais de cadastro de usuários
   * `email`: E-mail de acesso (Único)
   * `emailVerified`: Estado de verificação de e-mail (BOOLEAN)
   * `name`: Nome do usuário
-  * `role`: Papel no sistema (`CITIZEN` | `INSTITUTION_ADMIN`)
+  * `role`: Papel no sistema (`CITIZEN` | `INSTITUTION_ADMIN` | `PLATFORM_ADMIN`)
   * `createdAt`, `updatedAt`: Timestamps de auditoria
 * **Relacionamento:** Um usuário do tipo `INSTITUTION_ADMIN` pode possuir um vínculo com uma entidade `Institution`.
 
@@ -83,7 +83,7 @@ As entidades centrais refletem os requisitos funcionais de cadastro de usuários
   * `name`: Nome institucional do lar/abrigo
   * `address`: Endereço físico completo
   * `contactPhone`: Telefone institucional para contato
-  * `verifiedStatus`: Status de validação legal (BOOLEAN)
+  * `status`: Estado da validação (`PENDING` | `VERIFIED` | `SUSPENDED` | `REJECTED`)
 
 ### 3.3. `MissingPersonReport` (Desaparecidos cadastrados por cidadãos)
 * **Atributos:**

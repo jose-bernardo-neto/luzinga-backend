@@ -69,5 +69,6 @@ export const env = {
     "AI_SERVICE_API_KEY",
     "development-only-change-me",
   ),
+  PLATFORM_ADMIN_EMAILS: list("PLATFORM_ADMIN_EMAILS", []),
   LOG_LEVEL: optional("LOG_LEVEL", nodeEnv === "production" ? "info" : "debug"),
 } as const;

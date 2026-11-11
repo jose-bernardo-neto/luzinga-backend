@@ -33,8 +33,9 @@ export class PrismaBiometricOwnerAccess implements BiometricOwnerAccessPort {
     const shelteredPerson = await this.prisma.shelteredPerson.findUnique({
       where: { id: ownerId },
       select: {
+        archivedAt: true,
         institution: {
-          select: { userId: true, verifiedStatus: true },
+          select: { userId: true, status: true },
         },
       },
     });
@@ -43,13 +44,19 @@ export class PrismaBiometricOwnerAccess implements BiometricOwnerAccessPort {
       throw new NotFoundError("Pessoa acolhida não encontrada.");
     }
 
+    if (shelteredPerson.archivedAt) {
+      throw new ForbiddenError(
+        "Não é possível cadastrar biometria em um registro arquivado.",
+      );
+    }
+
     if (shelteredPerson.institution.userId !== actorId) {
       throw new ForbiddenError(
         "Apenas a instituição responsável pode cadastrar esta biometria.",
       );
     }
 
-    if (!shelteredPerson.institution.verifiedStatus) {
+    if (shelteredPerson.institution.status !== "VERIFIED") {
       throw new ForbiddenError(
         "A instituição precisa estar verificada para cadastrar biometria.",
       );

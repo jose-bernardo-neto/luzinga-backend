@@ -59,9 +59,10 @@ casos de uso. Esse é o local correto para ligar novas implementações concreta
 ## Autenticação
 
 - Better Auth persiste usuários, contas, sessões e verificações via Prisma.
-- Perfis aceitos: `CITIZEN` e `INSTITUTION_ADMIN`.
+- Perfis aceitos: `CITIZEN`, `INSTITUTION_ADMIN` e `PLATFORM_ADMIN`.
 - Perfil padrão: `CITIZEN`.
 - O perfil é validado no hook de criação.
+- `PLATFORM_ADMIN` só pode ser criado por e-mail explicitamente allowlisted.
 - O hook de atualização remove tentativas de alteração de `role` pelo endpoint genérico de usuário.
 - Sessões duram sete dias e têm atualização configurada para um dia.
 - Redefinição de senha revoga sessões existentes.

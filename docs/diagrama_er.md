@@ -80,7 +80,7 @@ erDiagram
         string document "nullable, unique"
         string address
         string contactPhone
-        boolean verifiedStatus
+        InstitutionStatus status
         datetime createdAt
         datetime updatedAt
     }
@@ -94,6 +94,7 @@ erDiagram
         ShelterStatus status
         datetime createdAt
         datetime updatedAt
+        datetime archivedAt "nullable"
     }
 
     BiometricRecord {
@@ -144,7 +145,8 @@ Consequências do schema atual:
 
 | Enum | Valores |
 | --- | --- |
-| `UserRole` | `CITIZEN`, `INSTITUTION_ADMIN` |
+| `UserRole` | `CITIZEN`, `INSTITUTION_ADMIN`, `PLATFORM_ADMIN` |
+| `InstitutionStatus` | `PENDING`, `VERIFIED`, `SUSPENDED`, `REJECTED` |
 | `ReportStatus` | `ACTIVE`, `FOUND`, `ARCHIVED` |
 | `ShelterStatus` | `UNCLAIMED`, `IDENTIFIED`, `REUNITED` |
 | `BiometricOwnerType` | `MISSING_PERSON`, `SHELTERED_PERSON` |

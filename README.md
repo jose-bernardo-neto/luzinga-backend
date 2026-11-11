@@ -144,7 +144,9 @@ cadastro/persistência de novas referências biométricas.
 - `POST /api/auth/reset-password`
 - `GET /api/auth/get-session`
 
-O cadastro aceita `role: "CITIZEN" | "INSTITUTION_ADMIN"`. O valor é validado por um `databaseHook`.
+O cadastro aceita `CITIZEN`, `INSTITUTION_ADMIN` e `PLATFORM_ADMIN`. O último
+só é permitido para e-mails configurados em `PLATFORM_ADMIN_EMAILS`; o valor é
+validado por um `databaseHook`.
 
 ### Aplicação
 
@@ -157,6 +159,12 @@ O cadastro aceita `role: "CITIZEN" | "INSTITUTION_ADMIN"`. O valor é validado p
 - `POST /matching/detect` — valida a foto e detecta rosto (multipart `image`)
 - `POST /matching/search` — busca por similaridade facial (multipart `image`)
 - `POST /matching/references/:ownerType/:ownerId` — cadastra de 1 a 3 referências biométricas
+- `POST /institutions` / `GET|PATCH /institutions/me` — cadastro e gestão da própria instituição
+- `GET /institutions/admin` — fila administrativa de instituições
+- `PATCH /institutions/admin/:id/status` — verifica, rejeita ou suspende instituição
+- `POST|GET /sheltered-people` — cria e lista acolhidos da instituição
+- `GET|PATCH|DELETE /sheltered-people/:id` — consulta, atualiza ou arquiva acolhido
+- `POST /sheltered-people/:id/restore` — restaura registro arquivado
 
 ## Decisões de arquitetura
 
@@ -167,6 +175,7 @@ O cadastro aceita `role: "CITIZEN" | "INSTITUTION_ADMIN"`. O valor é validado p
 - **Biometria fora do TS**: o serviço Python é acessado por um adapter HTTP (`FaceMatchingPort`), mantendo a API principal independente do modelo de IA.
 - **pgvector**: `BiometricRecord.embedding` é `Unsupported("vector(512)")`; consultas vetoriais serão feitas via SQL no serviço de IA.
 - **Referências biométricas**: imagens são armazenadas em disco local configurável e embeddings são persistidos no pgvector. O autor da ficha ou a instituição verificada responsável pode cadastrar até três fotos.
+- **Administração da plataforma**: `PLATFORM_ADMIN` é reservado a e-mails em `PLATFORM_ADMIN_EMAILS` e pode revisar o status das instituições, sem operar acolhidos em nome delas.
 - **LGPD**: exclusões em cascata existem para relações específicas, mas o termo/registro de consentimento do acolhido ainda não está modelado e deve ser implementado em etapa futura (US-06).
 
 ## Próximos passos sugeridos

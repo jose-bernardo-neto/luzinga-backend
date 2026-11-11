@@ -42,6 +42,14 @@ class PgVectorBiometricRepository:
                     FROM "biometric_record" AS record
                     CROSS JOIN query_embeddings AS query
                     WHERE record."embedding" IS NOT NULL
+                      AND (
+                        record."ownerType" <> 'SHELTERED_PERSON'
+                        OR EXISTS (
+                          SELECT 1 FROM "sheltered_person" sheltered
+                          WHERE sheltered."id" = record."ownerId"
+                            AND sheltered."archivedAt" IS NULL
+                        )
+                      )
                     GROUP BY
                         record."id",
                         record."ownerType",

@@ -18,7 +18,7 @@ avaliada contra o código atual; ela não altera o requisito original.
 
 | ID | Requisito | Critérios consolidados | Estado e evidência |
 | --- | --- | --- | --- |
-| RF-01 | Cadastro de usuários | Registrar cidadão ou usuário institucional; instituição informa registro legal e razão social e passa por validação. | **Parcial.** Better Auth aceita `CITIZEN` e `INSTITUTION_ADMIN`. `Institution` contém `legalName`, `document` e `verifiedStatus`, mas não há fluxo para criar ou verificar esses dados. |
+| RF-01 | Cadastro de usuários | Registrar cidadão ou usuário institucional; instituição informa registro legal e razão social e passa por validação. | **Implementado no backend.** Representante cadastra a instituição pendente e `PLATFORM_ADMIN` verifica, rejeita ou suspende. Alteração legal exige nova revisão. |
 | RF-02 | Autenticação de sessão | Login por e-mail/senha com sessão segura e persistente. | **Implementado.** Better Auth persiste `Session` e entrega cookie de sessão. O projeto não afirma que o token seja JWT; JWT é apenas exemplo no requisito. |
 | RF-03 | Recuperação de credenciais | Token seguro por e-mail, sem 2FA; redefinição deve invalidar sessões. | **Parcial.** Better Auth implementa solicitação/redefinição e `revokeSessionsOnPasswordReset`; o adapter atual é `ConsoleMailer`, não um serviço real de e-mail. A expiração de 30 minutos da US-02 não está configurada explicitamente. |
 
@@ -43,7 +43,7 @@ avaliada contra o código atual; ela não altera o requisito original.
 | ID | Requisito | Critérios consolidados | Estado e evidência |
 | --- | --- | --- | --- |
 | RF-10 | Registro de desaparecidos | Cidadão submete e gerencia ficha com dados biográficos e fotografias. | **Parcial.** CRUD de ficha e cadastro de até três referências biométricas pelo autor existem; remoção/substituição de fotos ainda não. |
-| RF-11 | Gestão de acolhidos | Instituição publica, atualiza e remove pessoas sob sua tutela em painel dedicado. | **Parcial.** Instituição verificada pode cadastrar biometria de acolhido existente; CRUD/painel de acolhidos ainda não existe. |
+| RF-11 | Gestão de acolhidos | Instituição publica, atualiza e remove pessoas sob sua tutela em painel dedicado. | **Implementado no backend.** Instituição verificada cria, lista, consulta, atualiza, arquiva/restaura e adiciona biometria em etapa separada. Interface visual ainda não existe. |
 
 ## Requisitos não funcionais
 
@@ -72,12 +72,12 @@ alterar unilateralmente a especificação:
 
 | História | Requisitos relacionados | Estado resumido |
 | --- | --- | --- |
-| US-01 — Cadastro diferenciado | RF-01 | Parcial |
+| US-01 — Cadastro diferenciado | RF-01 | Implementado no backend |
 | US-02 — Recuperação de senha | RF-03 | Parcial |
 | US-03 — Upload e diagnóstico | RF-04, RF-05 | Parcial |
 | US-04 — Face matching ordenado | RF-07, RF-08, RNF-03 | Parcial / não verificado |
 | US-05 — Busca multimodal | RF-06, RF-09 | Parcial / pendente |
-| US-06 — Registro de acolhido | RF-11, RNF-01 | Estruturado / pendente |
+| US-06 — Registro de acolhido | RF-11, RNF-01 | Implementado no backend / LGPD parcial |
 
 ## Decisões ainda necessárias
 

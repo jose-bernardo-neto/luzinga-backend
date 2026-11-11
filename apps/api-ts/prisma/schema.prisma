@@ -16,6 +16,7 @@ datasource db {
 enum UserRole {
   CITIZEN
   INSTITUTION_ADMIN
+  PLATFORM_ADMIN
 }
 
 model User {
@@ -119,19 +120,26 @@ enum ShelterStatus {
   REUNITED
 }
 
-model Institution {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  name           String
-  legalName      String?
-  document       String?  @unique
-  address        String
-  contactPhone   String
-  verifiedStatus Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+enum InstitutionStatus {
+  PENDING
+  VERIFIED
+  SUSPENDED
+  REJECTED
+}
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Institution {
+  id           String            @id @default(uuid())
+  userId       String            @unique
+  name         String
+  legalName    String?
+  document     String?           @unique
+  address      String
+  contactPhone String
+  status       InstitutionStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   shelteredPeople ShelteredPerson[]
 
   @@map("institution")
@@ -144,6 +152,7 @@ model ShelteredPerson {
   approxAge     String?
   foundLocation String?
   status        ShelterStatus @default(UNCLAIMED)
+  archivedAt    DateTime?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -151,6 +160,7 @@ model ShelteredPerson {
 
   @@index([institutionId])
   @@index([status])
+  @@index([archivedAt])
   @@map("sheltered_person")
 }
 
@@ -160,12 +170,12 @@ enum BiometricOwnerType {
 }
 
 model BiometricRecord {
-  id        String              @id @default(uuid())
+  id        String                      @id @default(uuid())
   ownerType BiometricOwnerType
   ownerId   String
   imagePath String
   embedding Unsupported("vector(512)")?
-  createdAt DateTime            @default(now())
+  createdAt DateTime                    @default(now())
 
   @@index([ownerType, ownerId])
   @@map("biometric_record")

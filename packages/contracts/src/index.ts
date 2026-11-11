@@ -3,7 +3,11 @@
  * Mantenha aqui apenas tipos/constantes estáveis de domínio e de API.
  */
 
-export const USER_ROLES = ["CITIZEN", "INSTITUTION_ADMIN"] as const;
+export const USER_ROLES = [
+  "CITIZEN",
+  "INSTITUTION_ADMIN",
+  "PLATFORM_ADMIN",
+] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const REPORT_STATUSES = ["ACTIVE", "FOUND", "ARCHIVED"] as const;
@@ -17,6 +21,14 @@ export const BIOMETRIC_OWNER_TYPES = [
   "SHELTERED_PERSON",
 ] as const;
 export type BiometricOwnerType = (typeof BIOMETRIC_OWNER_TYPES)[number];
+
+export const INSTITUTION_STATUSES = [
+  "PENDING",
+  "VERIFIED",
+  "SUSPENDED",
+  "REJECTED",
+] as const;
+export type InstitutionStatus = (typeof INSTITUTION_STATUSES)[number];
 
 export interface ApiErrorBody {
   error: {

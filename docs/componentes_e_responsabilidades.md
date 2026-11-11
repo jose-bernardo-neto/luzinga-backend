@@ -56,11 +56,14 @@ fora de produção para evitar múltiplos clientes durante reload.
 - `/auth/me` protegido;
 - porta `Mailer` e adapter de console.
 
-**Não implementado como fluxo próprio:**
+**Instituições e administração:**
 
-- cadastro completo dos dados da instituição;
-- verificação institucional;
-- adapter real de envio de e-mail.
+- representante cria e edita a própria instituição;
+- status: `PENDING`, `VERIFIED`, `SUSPENDED`, `REJECTED`;
+- alteração de documento ou razão social reinicia a verificação;
+- `PLATFORM_ADMIN` lista e altera status, mas não opera acolhidos;
+- criação de `PLATFORM_ADMIN` exige e-mail em `PLATFORM_ADMIN_EMAILS`;
+- o adapter de e-mail continua sendo de console.
 
 ### Módulo `reports`
 
@@ -172,7 +175,8 @@ Entidades presentes:
 - domínio: `MissingPersonReport`, `Institution`, `ShelteredPerson`, `BiometricRecord`.
 
 `Institution`, `ShelteredPerson` e `BiometricRecord` estão **estruturados no
-schema**, mas ainda não possuem módulos HTTP completos na API. O vínculo
+schema** e agora possuem fluxos HTTP para instituição, acolhidos e referências
+biométricas. O vínculo
 polimórfico de `BiometricRecord.ownerId` não é uma foreign key Prisma para cada
 tipo de proprietário; agentes não devem presumir integridade referencial que o
 banco atualmente não impõe.
@@ -186,3 +190,11 @@ repositório.
 A imagem `pgvector/pgvector` não publica tag Alpine para PostgreSQL 17; por isso
 o Compose mantém `pg17`. Não troque para uma tag não publicada apenas para
 cumprir preferência de distribuição base.
+
+## Módulo `sheltered`
+
+- CRUD de pessoas acolhidas restrito à própria instituição verificada;
+- status `UNCLAIMED`, `IDENTIFIED`, `REUNITED`;
+- remoção lógica por `archivedAt` e restauração explícita;
+- registros arquivados não aparecem por padrão nem participam do matching;
+- fotos entram em etapa separada pelo endpoint de referências biométricas.

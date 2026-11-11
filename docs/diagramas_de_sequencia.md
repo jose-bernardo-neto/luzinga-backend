@@ -15,7 +15,7 @@ sequenceDiagram
 
     Cliente->>API: POST /api/auth/sign-up/email<br/>{name, email, password, role}
     API->>Auth: handler(request)
-    Auth->>Auth: validar role<br/>CITIZEN ou INSTITUTION_ADMIN
+    Auth->>Auth: validar role e allowlist<br/>para PLATFORM_ADMIN
     Auth->>DB: criar User e Account
     DB-->>Auth: registros persistidos
     Auth->>DB: criar Session
