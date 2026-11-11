@@ -10,7 +10,6 @@
   "scripts": {
     "dev": "cd apps/api-ts && bun run dev",
     "dev:ai": "cd apps/ai-python && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
-    "dev:client": "python3 -m http.server 3001 --directory client",
     "build": "cd apps/api-ts && bun run build",
     "start": "cd apps/api-ts && bun run start",
     "typecheck": "cd apps/api-ts && bun run typecheck",

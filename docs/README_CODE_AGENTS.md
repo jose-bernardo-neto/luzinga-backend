@@ -31,7 +31,6 @@ decisão arquitetural.
 ## Estado resumido confirmado
 
 - Monorepo Bun com workspaces em `apps/*` e `packages/*`.
-- Cliente manual sem framework em `client/`, fora dos workspaces.
 - API principal em Bun/Elysia, autenticação Better Auth e persistência Prisma/PostgreSQL.
 - Serviço FastAPI separado para biometria.
 - PostgreSQL 17 com `vector`, `pg_trgm` e `unaccent`.

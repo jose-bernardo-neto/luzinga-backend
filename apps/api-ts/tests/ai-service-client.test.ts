@@ -68,6 +68,8 @@ describe("cliente do serviço de IA", () => {
         ownerId: "person-1",
         similarity: 0.91,
         imagePath: null,
+        displayName: null,
+        context: null,
       }],
       processingMs: 12,
       processedImages: 2,

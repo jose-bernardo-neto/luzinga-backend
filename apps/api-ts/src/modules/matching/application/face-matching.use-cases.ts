@@ -4,6 +4,7 @@ import type {
   FaceMatchResult,
 } from "@/modules/matching/domain/face-matching";
 import type { FaceMatchingPort } from "@/modules/matching/ports/face-matching.port";
+import type { FaceMatchCandidateDetailsPort } from "@/modules/matching/ports/face-match-candidate-details.port";
 import { BadRequestError } from "@/shared/errors/app-error";
 
 export class DetectFace {
@@ -21,7 +22,10 @@ export interface FindFaceMatchesInput {
 }
 
 export class FindFaceMatches {
-  constructor(private readonly faceMatching: FaceMatchingPort) {}
+  constructor(
+    private readonly faceMatching: FaceMatchingPort,
+    private readonly candidateDetails: FaceMatchCandidateDetailsPort,
+  ) {}
 
   async execute(input: FindFaceMatchesInput): Promise<FaceMatchResult> {
     if (input.images.length < 1 || input.images.length > 3) {
@@ -31,6 +35,10 @@ export class FindFaceMatches {
     const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
     const threshold = Math.min(Math.max(input.threshold ?? 0.5, 0), 1);
 
-    return this.faceMatching.match(input.images, { limit, threshold });
+    const result = await this.faceMatching.match(input.images, { limit, threshold });
+    return {
+      ...result,
+      candidates: await this.candidateDetails.enrich(result.candidates),
+    };
   }
 }

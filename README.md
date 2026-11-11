@@ -62,7 +62,6 @@ Orientações específicas para agentes de código estão em
 │           └── main.py
 ├── packages/
 │   └── contracts/                  # Tipos e constantes compartilhados
-├── client/                         # Cliente vanilla para testes manuais
 ├── docker-compose.yml              # PostgreSQL + pgvector
 └── tsconfig.base.json
 ```
@@ -133,7 +132,6 @@ cadastro/persistência de novas referências biométricas.
 | `bun run db:push` | Sincroniza o schema sem migração |
 | `bun run db:studio` | Abre o Prisma Studio |
 | `bun run dev:ai` | Sobe o FastAPI (requer venv ativo) |
-| `bun run dev:client` | Serve o cliente HTML/CSS/JS em `localhost:3001` |
 
 ## Endpoints principais
 
@@ -167,18 +165,6 @@ validado por um `databaseHook`.
 - `POST|GET /sheltered-people` — cria e lista acolhidos da instituição
 - `GET|PATCH|DELETE /sheltered-people/:id` — consulta, atualiza ou arquiva acolhido
 - `POST /sheltered-people/:id/restore` — restaura registro arquivado
-
-## Cliente simples
-
-Com banco, API e serviço Python em execução:
-
-```bash
-bun run dev:client
-```
-
-Acesse `http://localhost:3001`. O cliente em `client/` não usa framework nem
-build e permite testar autenticação, relatórios, instituições, acolhidos e
-biometria.
 
 ## Decisões de arquitetura
 

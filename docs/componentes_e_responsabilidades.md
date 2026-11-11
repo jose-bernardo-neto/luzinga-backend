@@ -191,12 +191,6 @@ A imagem `pgvector/pgvector` não publica tag Alpine para PostgreSQL 17; por iss
 o Compose mantém `pg17`. Não troque para uma tag não publicada apenas para
 cumprir preferência de distribuição base.
 
-## `client`
-
-Cliente de desenvolvimento em HTML, CSS e JavaScript puros, servido na porta
-3001. Exercita os principais fluxos da API com cookies e CORS, sem ser uma
-interface de produção.
-
 ## Módulo `sheltered`
 
 - CRUD de pessoas acolhidas restrito à própria instituição verificada;

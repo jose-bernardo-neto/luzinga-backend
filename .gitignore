@@ -1,6 +1,7 @@
 # Dependências
 node_modules/
 .bun/
+client/
 
 # Build
 dist/

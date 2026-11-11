@@ -10,6 +10,9 @@ const image: FaceImage = {
 };
 
 describe("casos de uso de reconhecimento facial", () => {
+  const candidateDetails = {
+    enrich: mock(async (candidates) => candidates),
+  };
   test("encaminha a imagem para detecção", async () => {
     const detect = mock(async () => ({
       faceDetected: true,
@@ -36,7 +39,7 @@ describe("casos de uso de reconhecimento facial", () => {
     }));
     const port: FaceMatchingPort = { detect: mock(), match, enroll: mock() };
 
-    await new FindFaceMatches(port).execute({
+    await new FindFaceMatches(port, candidateDetails).execute({
       images: [image, image],
       limit: 999,
       threshold: -1,
@@ -50,11 +53,41 @@ describe("casos de uso de reconhecimento facial", () => {
       match: mock(),
       enroll: mock(),
     };
-    const useCase = new FindFaceMatches(port);
+    const useCase = new FindFaceMatches(port, candidateDetails);
 
     expect(useCase.execute({ images: [] })).rejects.toThrow("entre 1 e 3 fotos");
     expect(useCase.execute({ images: [image, image, image, image] })).rejects.toThrow(
       "entre 1 e 3 fotos",
     );
+  });
+
+  test("enriquece candidatos com nome e contexto para apresentação", async () => {
+    const rawCandidate = {
+      biometricRecordId: "bio-1",
+      ownerType: "MISSING_PERSON" as const,
+      ownerId: "person-1",
+      similarity: 0.91,
+      imagePath: null,
+      displayName: null,
+      context: null,
+    };
+    const match = mock(async () => ({
+      candidates: [rawCandidate],
+      processingMs: 2,
+      processedImages: 1,
+    }));
+    const enrich = mock(async () => [{
+      ...rawCandidate,
+      displayName: "Maria da Silva",
+      context: "Último local informado: Centro",
+    }]);
+    const port: FaceMatchingPort = { detect: mock(), match, enroll: mock() };
+
+    const result = await new FindFaceMatches(port, { enrich }).execute({
+      images: [image],
+    });
+
+    expect(enrich).toHaveBeenCalledWith([rawCandidate]);
+    expect(result.candidates[0]?.displayName).toBe("Maria da Silva");
   });
 });

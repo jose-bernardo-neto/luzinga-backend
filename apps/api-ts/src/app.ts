@@ -15,6 +15,7 @@ import {
 import { AiServiceFaceMatchingClient } from "@/modules/matching/adapters/ai/ai-service-face-matching.client";
 import { createMatchingRoutes } from "@/modules/matching/adapters/http/matching.routes";
 import { PrismaBiometricOwnerAccess } from "@/modules/matching/adapters/persistence/prisma-biometric-owner-access";
+import { PrismaFaceMatchCandidateDetails } from "@/modules/matching/adapters/persistence/prisma-face-match-candidate-details";
 import {
   DetectFace,
   FindFaceMatches,
@@ -53,7 +54,11 @@ export function createApp() {
 
   const faceMatching = new AiServiceFaceMatchingClient();
   const detectFace = new DetectFace(faceMatching);
-  const findFaceMatches = new FindFaceMatches(faceMatching);
+  const faceMatchCandidateDetails = new PrismaFaceMatchCandidateDetails(prisma);
+  const findFaceMatches = new FindFaceMatches(
+    faceMatching,
+    faceMatchCandidateDetails,
+  );
   const biometricOwnerAccess = new PrismaBiometricOwnerAccess(prisma);
   const registerBiometricReferences = new RegisterBiometricReferences(
     biometricOwnerAccess,

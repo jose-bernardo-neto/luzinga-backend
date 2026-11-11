@@ -19,6 +19,8 @@ export interface FaceMatchCandidate {
   ownerId: string;
   similarity: number;
   imagePath: string | null;
+  displayName: string | null;
+  context: string | null;
 }
 
 export interface FaceMatchResult {

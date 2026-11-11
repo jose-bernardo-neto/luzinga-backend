@@ -78,6 +78,8 @@ export class AiServiceFaceMatchingClient implements FaceMatchingPort {
         ownerId: candidate.owner_id,
         similarity: candidate.similarity,
         imagePath: candidate.image_path ?? null,
+        displayName: null,
+        context: null,
       })),
       processingMs: payload.processing_ms ?? 0,
       processedImages: payload.processed_images,
